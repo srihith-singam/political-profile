@@ -1,0 +1,1139 @@
+<title>Political Fingerprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400;12..96,75..100,600;12..96,75..100,800&family=JetBrains+Mono:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<style>
+:root{
+  --paper:#EAEAE4; --card:#F6F6F1; --card-2:#E0E1D9; --sunk:#DFE0D7;
+  --ink:#13160F; --ink-2:#3B4035; --muted:#6E7367;
+  --line:#C9CBC0; --line-2:#B2B5A8;
+  --accent:#136B4C; --accent-2:#0C4A34; --accent-soft:#CFE2D7;
+  --signal:#A5700A; --signal-soft:#EFE1BF;
+  --pole-a:#7B7F73; --pole-b:#13160F;
+  --shadow:0 1px 2px rgba(19,22,15,.07);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E110F; --card:#171B18; --card-2:#20251F; --sunk:#101413;
+    --ink:#E9ECE6; --ink-2:#BBC1B7; --muted:#878E84;
+    --line:#2A302B; --line-2:#3C443C;
+    --accent:#4CC48D; --accent-2:#9FE8C6; --accent-soft:#16352A;
+    --signal:#E3AE47; --signal-soft:#3A2E14;
+    --pole-a:#767D74; --pole-b:#E9ECE6;
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E110F; --card:#171B18; --card-2:#20251F; --sunk:#101413;
+  --ink:#E9ECE6; --ink-2:#BBC1B7; --muted:#878E84;
+  --line:#2A302B; --line-2:#3C443C;
+  --accent:#4CC48D; --accent-2:#9FE8C6; --accent-soft:#16352A;
+  --signal:#E3AE47; --signal-soft:#3A2E14;
+  --pole-a:#767D74; --pole-b:#E9ECE6;
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:"Newsreader",Georgia,"Times New Roman",serif;
+  font-size:17px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{font-family:"Bricolage Grotesque","Helvetica Neue",Arial,sans-serif;font-weight:800;text-wrap:balance;margin:0;letter-spacing:-.02em;line-height:1.05}
+.mono{font-family:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace}
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+.col{max-width:660px;margin:0 auto}
+
+/* ---- masthead ---- */
+.masthead{border-bottom:1px solid var(--line);background:var(--paper);position:sticky;top:0;z-index:40}
+.masthead .wrap{display:flex;align-items:center;gap:14px;height:52px}
+.mark{width:19px;height:19px;flex:none}
+.brand{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:15px;letter-spacing:-.01em}
+.mast-meta{margin-left:auto;display:flex;align-items:center;gap:16px}
+.linkish{font-family:"JetBrains Mono",monospace;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid transparent;padding-bottom:1px}
+.linkish:hover{color:var(--ink);border-bottom-color:var(--accent)}
+
+/* ---- progress rail ---- */
+.rail{height:3px;background:var(--sunk);position:sticky;top:52px;z-index:39}
+.rail>i{display:block;height:100%;background:var(--accent);width:0;transition:width .35s cubic-bezier(.2,.7,.3,1)}
+
+/* ---- intro ---- */
+.hero{padding:64px 0 40px;display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+.hero h1{font-size:clamp(38px,6.2vw,62px)}
+.hero p.lede{font-size:19px;color:var(--ink-2);max-width:34em;margin:18px 0 0}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px;align-items:center}
+.btn{font-family:"JetBrains Mono",monospace;font-size:12.5px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;
+  border:1px solid var(--ink);background:var(--ink);color:var(--paper);padding:11px 18px;border-radius:1px;transition:transform .12s ease,background .15s ease}
+.btn:hover{transform:translateY(-1px)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line-2)}
+.btn.ghost:hover{border-color:var(--ink)}
+.btn.accent{background:var(--accent);border-color:var(--accent);color:#fff}
+:root[data-theme="dark"] .btn.accent,:root:not([data-theme="light"]) .btn.accent{color:#0B1310}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .btn.accent{color:#fff}}
+.btn[disabled]{opacity:.4;cursor:not-allowed;transform:none}
+.hero-fig{position:relative}
+.hero-fig canvas{width:100%;height:auto;display:block}
+
+/* ---- ledger ---- */
+.ledger{border-top:1px solid var(--line);padding:26px 0 70px}
+.ledger-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+table.packs{width:100%;border-collapse:collapse;font-family:"JetBrains Mono",monospace;font-size:12.5px}
+table.packs th{text-align:left;font-weight:500;color:var(--muted);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;padding:0 0 8px;border-bottom:1px solid var(--line)}
+table.packs td{padding:11px 0;border-bottom:1px solid var(--line);vertical-align:baseline;font-variant-numeric:tabular-nums}
+table.packs td.name{font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:14px;letter-spacing:0}
+.chip{display:inline-block;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border-radius:1px;border:1px solid var(--line-2);color:var(--muted)}
+.chip.new{background:var(--signal-soft);border-color:var(--signal);color:var(--signal)}
+.chip.done{border-color:var(--accent);color:var(--accent)}
+
+/* ---- ballot ---- */
+#view-test{padding:44px 0 90px}
+.q-meta{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.q-card{background:var(--card);border:1px solid var(--line);border-radius:2px;padding:34px 34px 26px;box-shadow:var(--shadow)}
+.q-tag{display:inline-flex;align-items:center;gap:7px;margin-bottom:16px}
+.q-tag b{font-family:"JetBrains Mono",monospace;font-size:10.5px;font-weight:500;letter-spacing:.13em;text-transform:uppercase;color:var(--accent)}
+.q-text{font-size:26px;line-height:1.34;font-weight:400;letter-spacing:-.005em;text-wrap:pretty;margin:0 0 4px}
+.scale{margin-top:28px;border-top:1px solid var(--line);padding-top:22px}
+.scale-poles{display:flex;justify-content:space-between;margin-bottom:12px}
+.ovals{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.oval{display:flex;flex-direction:column;align-items:center;gap:9px;padding:12px 4px 10px;border:1px solid var(--line);border-radius:2px;background:var(--paper);transition:border-color .12s ease,background .12s ease}
+.oval:hover{border-color:var(--ink-2)}
+.oval i{display:block;width:26px;height:15px;border-radius:9px;border:1.5px solid var(--line-2);background:transparent;transition:all .14s ease}
+.oval span{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:center;line-height:1.3}
+.oval[data-on="1"]{border-color:var(--accent);background:var(--accent-soft)}
+.oval[data-on="1"] i{background:var(--accent);border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--card)}
+.oval[data-on="1"] span{color:var(--ink)}
+.oval[data-on="1"][data-strong="1"] i{background:var(--signal);border-color:var(--signal)}
+.oval[data-on="1"][data-strong="1"]{border-color:var(--signal);background:var(--signal-soft)}
+.q-foot{display:flex;align-items:center;gap:18px;margin-top:18px}
+.q-foot .spacer{margin-left:auto}
+.keyhint{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted);letter-spacing:.04em}
+kbd{font-family:"JetBrains Mono",monospace;font-size:10.5px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:3px;padding:1px 5px;color:var(--ink-2)}
+.anim-in{animation:slide .3s cubic-bezier(.2,.7,.3,1)}
+@keyframes slide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---- profile ---- */
+#view-profile{padding:40px 0 90px}
+.slip{border:1px solid var(--line);background:var(--card);border-radius:2px;box-shadow:var(--shadow);overflow:hidden}
+.slip-top{padding:28px 30px 24px;border-bottom:1px dashed var(--line-2);display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.handle-wrap{display:flex;align-items:center;gap:2px}
+.handle-wrap span{font-family:"JetBrains Mono",monospace;font-size:14px;color:var(--muted)}
+input.handle{font-family:"JetBrains Mono",monospace;font-size:14px;background:transparent;border:none;border-bottom:1px dashed var(--line-2);color:var(--ink);padding:2px 0;width:15ch}
+input.handle:focus{outline:none;border-bottom-color:var(--accent)}
+.archetype{font-size:clamp(30px,4.6vw,46px);margin-top:8px}
+.stats{margin-left:auto;display:flex;gap:26px}
+.stat{text-align:right}
+.stat b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.slip-body{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:0}
+.fig{padding:26px 24px;border-right:1px solid var(--line)}
+.fig canvas{width:100%;height:auto;display:block}
+.fig figcaption{font-family:"JetBrains Mono",monospace;font-size:10.5px;line-height:1.6;color:var(--muted);margin-top:14px;text-align:center}
+.meters{padding:26px 30px;display:flex;flex-direction:column;gap:19px}
+.meter-head{display:flex;align-items:baseline;gap:8px}
+.meter-head b{font-family:"Bricolage Grotesque",sans-serif;font-size:14px;font-weight:600}
+.meter-head .val{margin-left:auto;font-family:"JetBrains Mono",monospace;font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.drift{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.04em}
+.drift.up{color:var(--accent)} .drift.dn{color:var(--signal)}
+.track{position:relative;height:22px;margin-top:7px}
+.track .bar{position:absolute;left:0;right:0;top:9px;height:4px;background:var(--sunk);border-radius:2px}
+.track .mid{position:absolute;left:50%;top:4px;width:1px;height:14px;background:var(--line-2)}
+.track .fill{position:absolute;top:9px;height:4px;background:var(--accent);border-radius:2px;transition:all .6s cubic-bezier(.2,.7,.3,1)}
+.track .knob{position:absolute;top:3px;width:3px;height:16px;background:var(--ink);border-radius:1px;transform:translateX(-1.5px);transition:left .6s cubic-bezier(.2,.7,.3,1)}
+.track .ghost{position:absolute;top:6px;width:1px;height:10px;background:var(--line-2)}
+.poles{display:flex;justify-content:space-between;margin-top:5px}
+.poles span{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--pole-a)}
+.poles span.hot{color:var(--pole-b)}
+
+.sigs{margin-top:34px}
+.sig{border-top:1px solid var(--line);padding:15px 0;display:grid;grid-template-columns:88px 1fr;gap:16px;align-items:baseline}
+.sig .verdict{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--signal)}
+.sig .verdict.no{color:var(--muted)}
+.sig q{font-size:17.5px;quotes:'\201C' '\201D'}
+.sig small{display:block;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:5px}
+
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}
+.note{background:var(--signal-soft);border:1px solid var(--signal);border-radius:2px;padding:14px 18px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:22px}
+.note p{margin:0;font-size:16px}
+.note .btn{margin-left:auto}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);
+  font-family:"JetBrains Mono",monospace;font-size:12px;letter-spacing:.05em;padding:11px 18px;border-radius:2px;opacity:0;pointer-events:none;transition:all .25s ease;z-index:80}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.review-list{margin-top:8px}
+.rev{border-top:1px solid var(--line);padding:13px 0;display:grid;grid-template-columns:1fr 210px;gap:18px;align-items:center}
+.rev q{font-size:16px}
+.rev .mini{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.rev .mini button{height:22px;border:1px solid var(--line);border-radius:1px;background:var(--paper);font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--muted)}
+.rev .mini button[data-on="1"]{background:var(--accent);border-color:var(--accent);color:#fff}
+:root[data-theme="dark"] .rev .mini button[data-on="1"]{color:#0B1310}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .rev .mini button[data-on="1"]{color:#0B1310}}
+.hidden{display:none!important}
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;gap:34px;padding-top:44px}
+  .hero-fig{max-width:360px}
+  .slip-body{grid-template-columns:1fr}
+  .fig{border-right:none;border-bottom:1px solid var(--line)}
+  .stats{margin-left:0}
+}
+@media (max-width:560px){
+  .q-card{padding:24px 20px 20px}.q-text{font-size:21px}
+  .oval span{font-size:9px}.sig{grid-template-columns:1fr;gap:6px}
+  .rev{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="masthead">
+  <div class="wrap">
+    <svg class="mark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 2 21.5 7v10L12 22 2.5 17V7z" stroke="currentColor" stroke-width="1.4"/>
+      <path d="M12 6.5 17.5 9.6v6.2L12 18.9 6.5 15.8V9.6z" stroke="currentColor" stroke-width="1.4" opacity=".45"/>
+      <circle cx="12" cy="12" r="1.8" fill="currentColor"/>
+    </svg>
+    <span class="brand">Political Fingerprint</span>
+    <nav class="mast-meta">
+      <button class="linkish" id="nav-ledger">Question log</button>
+      <button class="linkish hidden" id="nav-profile">My profile</button>
+    </nav>
+  </div>
+</header>
+<div class="rail" aria-hidden="true"><i id="rail-fill"></i></div>
+
+<!-- ============ INTRO ============ -->
+<main id="view-intro">
+  <div class="wrap">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">A standing record · Edition <span id="edition-no">3</span></p>
+        <h1>Forty-eight arguments you have already had on X.</h1>
+        <p class="lede">Every proposition below is a live fight on the timeline, written narrowly enough that agreeing means one specific thing. Answer them and you get a fingerprint: six axes, a position on each, and the quotes to prove it. New propositions are added as new fights break out — your fingerprint updates without you retaking anything.</p>
+        <div class="hero-actions">
+          <button class="btn accent" id="cta-start">Start the ballot</button>
+          <button class="btn ghost hidden" id="cta-resume">Resume</button>
+          <button class="btn ghost hidden" id="cta-profile">Open my profile</button>
+        </div>
+        <p class="keyhint" style="margin-top:18px" id="intro-status"></p>
+      </div>
+      <figure class="hero-fig" style="margin:0">
+        <canvas id="hero-canvas" width="760" height="760" aria-label="Six-axis fingerprint diagram"></canvas>
+      </figure>
+    </section>
+  </div>
+  <div class="wrap">
+    <section class="ledger" id="ledger">
+      <div class="ledger-head">
+        <h2 style="font-size:19px">Question log</h2>
+        <p class="eyebrow" style="margin:0">Propositions are added, never rewritten</p>
+      </div>
+      <table class="packs">
+        <thead><tr><th style="width:34%">Set</th><th>Added</th><th>Propositions</th><th>Covers</th><th style="text-align:right">Status</th></tr></thead>
+        <tbody id="pack-rows"></tbody>
+      </table>
+    </section>
+  </div>
+</main>
+
+<!-- ============ BALLOT ============ -->
+<main id="view-test" class="hidden">
+  <div class="wrap col">
+    <div class="q-meta">
+      <span class="eyebrow" id="q-counter">Q 01 / 48</span>
+      <span class="eyebrow" id="q-pack">Core ballot</span>
+    </div>
+    <article class="q-card" id="q-card">
+      <div class="q-tag"><b id="q-axis">Economy</b><span style="color:var(--line-2)">/</span><b id="q-topic" style="color:var(--muted)">Wages</b></div>
+      <p class="q-text" id="q-text"></p>
+      <div class="scale">
+        <div class="scale-poles"><span class="eyebrow">Disagree</span><span class="eyebrow">Agree</span></div>
+        <div class="ovals" id="ovals" role="radiogroup" aria-label="How strongly do you agree?"></div>
+      </div>
+      <div class="q-foot">
+        <button class="btn ghost" id="btn-back">Back</button>
+        <button class="btn ghost" id="btn-skip">No view</button>
+        <span class="spacer keyhint"><kbd>1</kbd>–<kbd>5</kbd> to answer · <kbd>0</kbd> to pass</span>
+      </div>
+    </article>
+    <p class="keyhint" style="margin-top:20px"><button class="linkish" id="btn-bail">Save and see my fingerprint so far</button></p>
+  </div>
+</main>
+
+<!-- ============ PROFILE ============ -->
+<main id="view-profile" class="hidden">
+  <div class="wrap">
+    <div id="update-note" class="note hidden">
+      <p><b id="note-count">6</b> <span id="note-verb">new propositions since you last checked in</span> — <span id="note-pack" class="mono" style="font-size:14px"></span>.</p>
+      <button class="btn" id="btn-answer-new">Answer the new ones</button>
+    </div>
+
+    <div class="slip" id="slip">
+      <div class="slip-top">
+        <div>
+          <div class="handle-wrap"><span>@</span><input class="handle" id="handle" maxlength="15" placeholder="yourhandle" spellcheck="false" aria-label="Your X handle"></div>
+          <h1 class="archetype" id="archetype">—</h1>
+          <p class="eyebrow" style="margin:10px 0 0" id="slip-date"></p>
+        </div>
+        <div class="stats">
+          <div class="stat"><b id="stat-answered">0</b><span class="eyebrow">Answered</span></div>
+          <div class="stat"><b id="stat-conviction">0%</b><span class="eyebrow">Strong views</span></div>
+          <div class="stat"><b id="stat-checkins">1</b><span class="eyebrow">Check-ins</span></div>
+        </div>
+      </div>
+      <div class="slip-body">
+        <figure class="fig" style="margin:0">
+          <canvas id="print-canvas" width="640" height="640" aria-label="Your six-axis fingerprint"></canvas>
+          <figcaption>Center of the hexagon is the left-hand pole of each axis,<br>outer edge is the right-hand pole. The dotted ring is dead center.</figcaption>
+        </figure>
+        <div class="meters" id="meters"></div>
+      </div>
+    </div>
+
+    <section class="sigs">
+      <div class="ledger-head"><h2 style="font-size:19px">Signature positions</h2><p class="eyebrow" style="margin:0">Where you did not hedge</p></div>
+      <div id="sig-list"></div>
+    </section>
+
+    <div class="actions">
+      <button class="btn accent" id="btn-copy-post">Copy post for X</button>
+      <button class="btn ghost" id="btn-card">Save profile card (PNG)</button>
+      <button class="btn ghost" id="btn-export">Back up my answers</button>
+      <button class="btn ghost" id="btn-import">Restore from backup</button>
+      <button class="btn ghost" id="btn-review">Review every answer</button>
+      <button class="btn ghost" id="btn-reset">Erase profile</button>
+      <input type="file" id="file-import" accept="application/json" class="hidden">
+    </div>
+
+    <section class="sigs hidden" id="review">
+      <div class="ledger-head"><h2 style="font-size:19px">Every proposition</h2><p class="eyebrow" style="margin:0">Change any answer — the fingerprint follows</p></div>
+      <div class="review-list" id="review-list"></div>
+    </section>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   AXES — the six poles a fingerprint is plotted against.
+   Center of the hexagon is pole[0]; the outer edge is pole[1].
+   ============================================================ */
+const AXES = [
+  {key:"econ",  label:"Economy",      poles:["Market","Redistribution"],
+   words:[{adj:"Free-Market",noun:"Deregulator"},{adj:"Redistributive",noun:"Leveller"}]},
+  {key:"bord",  label:"Borders",      poles:["Open","Restricted"],
+   words:[{adj:"Open-Border",noun:"Cosmopolitan"},{adj:"Fortified",noun:"Gatekeeper"}]},
+  {key:"speech",label:"Speech",       poles:["Guardrails","Unfiltered"],
+   words:[{adj:"Refereed",noun:"Moderator"},{adj:"Unfiltered",noun:"Absolutist"}]},
+  {key:"inst",  label:"Institutions", poles:["Steward","Insurgent"],
+   words:[{adj:"Institutional",noun:"Steward"},{adj:"Insurgent",noun:"Iconoclast"}]},
+  {key:"tech",  label:"Technology",   poles:["Accelerate","Restrain"],
+   words:[{adj:"Full-Throttle",noun:"Accelerationist"},{adj:"Precautionary",noun:"Decelerationist"}]},
+  {key:"cult",  label:"Culture",      poles:["Traditional","Progressive"],
+   words:[{adj:"Rooted",noun:"Traditionalist"},{adj:"Liberalising",noun:"Reformer"}]}
+];
+const AXIS = {}; AXES.forEach(function(a,i){AXIS[a.key]=a; a.i=i;});
+
+/* ============================================================
+   PROPOSITIONS — dir:+1 means agreeing pushes toward pole[1].
+   Packs are append-only: a set is added, never rewritten.
+   ============================================================ */
+const PACKS = [
+  {id:"core", name:"Core ballot", added:"2026-02-10", covers:"All six axes", items:[
+    {id:"e1", ax:"econ", topic:"Housing",     dir:+1, t:"A national cap on rent increases would do more good for tenants than harm to the supply of housing."},
+    {id:"e2", ax:"econ", topic:"Taxes",       dir:-1, t:"Someone earning $400,000 a year is already paying about their fair share."},
+    {id:"e3", ax:"econ", topic:"Trade",       dir:+1, t:"Tariffs on manufactured imports are worth the higher prices shoppers end up paying."},
+    {id:"e4", ax:"econ", topic:"Wages",       dir:+1, t:"The minimum wage should be pinned to local rent, so it differs city by city."},
+    {id:"e5", ax:"econ", topic:"Wealth",      dir:-1, t:"Most large fortunes reflect value their owners created rather than value they captured."},
+    {id:"b1", ax:"bord", topic:"Status",      dir:-1, t:"Anyone who has lived and worked here peacefully for five years should get a route to citizenship."},
+    {id:"b2", ax:"bord", topic:"Asylum",      dir:+1, t:"Asylum claims should be processed offshore, never after someone has already crossed the border."},
+    {id:"b3", ax:"bord", topic:"Visas",       dir:-1, t:"Caps on high-skilled work visas should be scrapped altogether."},
+    {id:"b4", ax:"bord", topic:"Capacity",    dir:+1, t:"Immigration at current levels is straining housing and services faster than it grows the economy."},
+    {id:"b5", ax:"bord", topic:"Enforcement", dir:-1, t:"Deporting someone who has lived here a decade without status is unjust whatever the law says."},
+    {id:"s1", ax:"speech", topic:"Moderation",   dir:+1, t:"A platform should never remove a legal post, however many people it offends."},
+    {id:"s2", ax:"speech", topic:"Anonymity",    dir:-1, t:"Anonymous accounts do more damage to public argument than they protect."},
+    {id:"s3", ax:"speech", topic:"Reach",        dir:+1, t:"Quietly downranking a post is censorship under a friendlier name."},
+    {id:"s4", ax:"speech", topic:"State power",  dir:-1, t:"Governments should be able to order platforms to pull medical misinformation during an emergency."},
+    {id:"s5", ax:"speech", topic:"Consequences", dir:+1, t:"Being fired over a personal post is a free-speech problem, not merely an employment one."},
+    {id:"i1", ax:"inst", topic:"Bureaucracy", dir:+1, t:"Career civil servants should be considerably easier to fire."},
+    {id:"i2", ax:"inst", topic:"Expertise",   dir:+1, t:"Public health agencies earned most of the distrust they now get."},
+    {id:"i3", ax:"inst", topic:"Media",       dir:-1, t:"Legacy newsrooms are still more reliable than the accounts that replaced them."},
+    {id:"i4", ax:"inst", topic:"Universities",dir:-1, t:"Universities are worth defending in roughly their present form."},
+    {id:"i5", ax:"inst", topic:"Elections",   dir:-1, t:"Elections in my country are administered honestly."},
+    {id:"t1", ax:"tech", topic:"Regulation",   dir:+1, t:"Labs should need a licence before training a frontier AI model."},
+    {id:"t2", ax:"tech", topic:"Labour",       dir:-1, t:"Within ten years AI will have created more jobs than it destroyed."},
+    {id:"t3", ax:"tech", topic:"Disclosure",   dir:+1, t:"Anything generated by AI should be legally required to say so."},
+    {id:"t4", ax:"tech", topic:"The race",     dir:-1, t:"Slowing AI development here mostly hands the lead to people who will be less careful with it."},
+    {id:"t5", ax:"tech", topic:"Training data",dir:+1, t:"Artists whose work trained a model are owed payment for it."},
+    {id:"c1", ax:"cult", topic:"Family",    dir:-1, t:"Falling birth rates are a problem the state should actively try to reverse."},
+    {id:"c2", ax:"cult", topic:"History",   dir:-1, t:"Statues of flawed historical figures should stay standing."},
+    {id:"c3", ax:"cult", topic:"Sport",     dir:-1, t:"Eligibility for women's sport should be decided by birth sex."},
+    {id:"c4", ax:"cult", topic:"Workplace", dir:+1, t:"Companies should keep formal diversity targets in their hiring."},
+    {id:"c5", ax:"cult", topic:"Religion",  dir:-1, t:"The decline of religion has left something real missing from public life."}
+  ]},
+  {id:"machine", name:"The machine question", added:"2026-05-19", covers:"Technology · Economy", items:[
+    {id:"t6", ax:"tech", topic:"Autonomy", dir:-1, t:"Self-driving cars should be waved onto public roads the moment they beat the average human driver."},
+    {id:"t7", ax:"tech", topic:"Children", dir:+1, t:"Social media should be off-limits to anyone under sixteen."},
+    {id:"t8", ax:"tech", topic:"Crypto",   dir:-1, t:"Crypto has produced more real value than harm."},
+    {id:"e6", ax:"econ", topic:"Debt",     dir:-1, t:"Cancelling student debt was a transfer from people who did not go to university to people who did."},
+    {id:"e7", ax:"econ", topic:"Housing",  dir:-1, t:"Zoning reform, not subsidy, is the main fix for housing costs."},
+    {id:"e8", ax:"econ", topic:"Health",   dir:+1, t:"Healthcare should be paid for out of taxes rather than by employers or individuals."}
+  ]},
+  {id:"borders2", name:"Borders, second round", added:"2026-07-02", covers:"Borders · Culture", items:[
+    {id:"b6", ax:"bord", topic:"Integration", dir:+1, t:"Citizenship should require demonstrated fluency in the national language."},
+    {id:"b7", ax:"bord", topic:"Enforcement", dir:-1, t:"Employers who hire undocumented workers deserve harsher punishment than the workers do."},
+    {id:"b8", ax:"bord", topic:"Status",      dir:-1, t:"Birthright citizenship should stay exactly as it is."},
+    {id:"c6", ax:"cult", topic:"Drugs",     dir:+1, t:"Possession of any drug for personal use should be fully decriminalised."},
+    {id:"c7", ax:"cult", topic:"Family",    dir:-1, t:"Marriage is worth actively promoting as public policy, not merely tolerating as a private choice."},
+    {id:"c8", ax:"cult", topic:"Education", dir:+1, t:"Schools should teach the ugliest parts of national history without softening them."}
+  ]},
+  {id:"speech2", name:"The speech settlement", added:"2026-08-21", covers:"Speech · Institutions", items:[
+    {id:"s6", ax:"speech", topic:"Elections",   dir:-1, t:"Posting political content during an election should require a verified identity."},
+    {id:"s7", ax:"speech", topic:"Advertisers", dir:-1, t:"Advertisers pulling spend over content they dislike is a legitimate market response."},
+    {id:"s8", ax:"speech", topic:"Enforcement", dir:+1, t:"Harassment rules are enforced so unevenly that they should be scrapped and written again from zero."},
+    {id:"i6", ax:"inst", topic:"Central bank", dir:+1, t:"Central bankers should be elected rather than appointed."},
+    {id:"i7", ax:"inst", topic:"Trust",        dir:+1, t:"Most conspiracy theories about institutions turn out to hold a kernel of truth."},
+    {id:"i8", ax:"inst", topic:"Courts",       dir:+1, t:"The highest court should have fixed term limits."}
+  ]}
+];
+
+const ITEMS = [];
+PACKS.forEach(function(p){ p.items.forEach(function(q){ q.pack=p; ITEMS.push(q); }); });
+const BY_ID = {}; ITEMS.forEach(function(q){ BY_ID[q.id]=q; });
+const TOTAL = ITEMS.length;
+
+const CHOICES = [
+  {v:-2, label:"Strongly disagree"},
+  {v:-1, label:"Disagree"},
+  {v: 0, label:"Mixed"},
+  {v: 1, label:"Agree"},
+  {v: 2, label:"Strongly agree"}
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const KEY = "political-fingerprint/v1";
+let state = load();
+
+function blank(){
+  return {answers:{}, handle:"", checkins:0, prev:null, runFrom:null, runFromN:0, started:null, updated:null};
+}
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return blank();
+    const s = JSON.parse(raw);
+    const b = blank();
+    for(const k in b) if(!(k in s)) s[k]=b[k];
+    // drop answers for propositions that no longer exist
+    for(const id in s.answers) if(!BY_ID[id]) delete s.answers[id];
+    return s;
+  }catch(e){ return blank(); }
+}
+function save(){
+  state.updated = Date.now();
+  if(!state.started) state.started = state.updated;
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+}
+function hasProfile(){ return Object.keys(state.answers).length > 0; }
+
+/* ============================================================
+   SCORING — each axis lands on 0-100, 50 being dead center.
+   ============================================================ */
+function scores(answers){
+  const a = answers || state.answers, out = {};
+  AXES.forEach(function(ax){
+    let sum=0, n=0;
+    ITEMS.forEach(function(q){
+      if(q.ax!==ax.key) return;
+      const v = a[q.id];
+      if(typeof v !== "number") return;
+      sum += v * q.dir; n++;
+    });
+    out[ax.key] = n ? Math.round(50 + (sum/(n*2))*50) : 50;
+    out[ax.key+"_n"] = n;
+  });
+  return out;
+}
+function answeredCount(){
+  let n=0; for(const id in state.answers) if(typeof state.answers[id]==="number") n++;
+  return n;
+}
+function strongCount(){
+  let n=0; for(const id in state.answers) if(Math.abs(state.answers[id])===2) n++;
+  return n;
+}
+function archetype(sc){
+  const ranked = AXES.map(function(ax){
+    return {ax:ax, dev:Math.abs(sc[ax.key]-50), side:sc[ax.key]>=50?1:0};
+  }).sort(function(a,b){ return b.dev-a.dev; });
+  if(ranked[0].dev < 8) return "The Studiously Uncommitted";
+  const adj = ranked[0].ax.words[ranked[0].side].adj;
+  const noun = (ranked[1].dev >= 6 ? ranked[1] : ranked[0]).ax.words[(ranked[1].dev>=6?ranked[1]:ranked[0]).side].noun;
+  return "The " + adj + " " + noun;
+}
+
+/* ============================================================
+   DOM helpers
+   ============================================================ */
+const $ = function(id){ return document.getElementById(id); };
+const css = function(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); };
+const fmtDate = function(ms){
+  return new Date(ms).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
+};
+const fmtAdded = function(iso){
+  const p = iso.split("-");
+  return new Date(+p[0], +p[1]-1, +p[2]).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
+};
+let toastTimer;
+function toast(msg){
+  const el = $("toast"); el.textContent = msg; el.classList.add("on");
+  clearTimeout(toastTimer); toastTimer = setTimeout(function(){ el.classList.remove("on"); }, 2200);
+}
+
+/* ============================================================
+   THE FINGERPRINT — hexagonal plot on canvas.
+   ============================================================ */
+function hexPoints(cx, cy, r){
+  const pts = [];
+  for(let i=0;i<6;i++){
+    const a = -Math.PI/2 + i*Math.PI/3;
+    pts.push([cx + Math.cos(a)*r, cy + Math.sin(a)*r]);
+  }
+  return pts;
+}
+function tracePoly(ctx, pts){
+  ctx.beginPath();
+  pts.forEach(function(p,i){ i ? ctx.lineTo(p[0],p[1]) : ctx.moveTo(p[0],p[1]); });
+  ctx.closePath();
+}
+function drawPrint(cv, vals, opt){
+  opt = opt || {};
+  const ctx = cv.getContext("2d");
+  const W = cv.width, H = cv.height, cx = W/2, cy = H/2;
+  const R = Math.min(W,H) * (opt.labels===false ? 0.44 : 0.355);
+  const k = W/640; // stroke scale relative to the reference canvas
+  ctx.clearRect(0,0,W,H);
+  ctx.lineJoin = "round";
+
+  const line = css("--line"), line2 = css("--line-2"), accent = css("--accent"),
+        muted = css("--muted"), ink = css("--ink");
+
+  // rings
+  [0.25,0.5,0.75,1].forEach(function(t){
+    tracePoly(ctx, hexPoints(cx,cy,R*t));
+    if(t===0.5){ ctx.setLineDash([3*k,4*k]); ctx.strokeStyle = line2; }
+    else { ctx.setLineDash([]); ctx.strokeStyle = line; }
+    ctx.lineWidth = 1*k; ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  // spokes
+  ctx.strokeStyle = line; ctx.lineWidth = 1*k;
+  hexPoints(cx,cy,R).forEach(function(p){
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(p[0],p[1]); ctx.stroke();
+  });
+
+  // ghost outline (previous check-in)
+  if(opt.ghost){
+    const g = hexPoints(cx,cy,R).map(function(p,i){
+      const t = Math.max(0,Math.min(100,opt.ghost[AXES[i].key]))/100;
+      return [cx+(p[0]-cx)*t, cy+(p[1]-cy)*t];
+    });
+    tracePoly(ctx,g);
+    ctx.setLineDash([4*k,4*k]); ctx.strokeStyle = line2; ctx.lineWidth = 1.5*k; ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // the print itself
+  const pts = hexPoints(cx,cy,R).map(function(p,i){
+    const t = Math.max(0,Math.min(100,vals[AXES[i].key]))/100;
+    return [cx+(p[0]-cx)*t, cy+(p[1]-cy)*t];
+  });
+  tracePoly(ctx,pts);
+  ctx.fillStyle = accent; ctx.globalAlpha = opt.alpha==null ? 0.17 : opt.alpha; ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = accent; ctx.lineWidth = 2.2*k; ctx.stroke();
+  pts.forEach(function(p){
+    ctx.beginPath(); ctx.arc(p[0],p[1],4*k,0,Math.PI*2);
+    ctx.fillStyle = accent; ctx.fill();
+  });
+
+  if(opt.labels === false) return;
+
+  // axis labels, set outside the outer ring
+  const lr = R + 26*k;
+  ctx.font = 600 + " " + (11.5*k) + "px 'JetBrains Mono', ui-monospace, monospace";
+  ctx.textBaseline = "middle";
+  hexPoints(cx,cy,lr).forEach(function(p,i){
+    const ax = AXES[i];
+    const dx = p[0]-cx;
+    ctx.textAlign = Math.abs(dx) < 1 ? "center" : (dx>0 ? "left" : "right");
+    ctx.fillStyle = muted;
+    ctx.fillText(ax.label.toUpperCase(), p[0], p[1] - (opt.values?7*k:0));
+    if(opt.values){
+      ctx.font = 700 + " " + (13*k) + "px 'JetBrains Mono', ui-monospace, monospace";
+      ctx.fillStyle = ink;
+      ctx.fillText(String(vals[ax.key]), p[0], p[1] + 9*k);
+      ctx.font = 600 + " " + (11.5*k) + "px 'JetBrains Mono', ui-monospace, monospace";
+    }
+  });
+}
+
+/* ---- hero: an ambient print that keeps drifting ---- */
+(function heroPrint(){
+  const cv = $("hero-canvas"); if(!cv) return;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let cur = {}, target = {};
+  const roll = function(){ AXES.forEach(function(a){ target[a.key] = 18 + Math.random()*64; }); };
+  AXES.forEach(function(a){ cur[a.key] = 30 + Math.random()*40; });
+  roll();
+  let last = 0;
+  function frame(ts){
+    if(hasProfile()){ drawPrint(cv, scores(), {labels:false, alpha:0.2}); return; }
+    if(ts - last > 2600){ roll(); last = ts; }
+    let moving = false;
+    AXES.forEach(function(a){
+      const d = target[a.key] - cur[a.key];
+      if(Math.abs(d) > 0.15){ cur[a.key] += d*0.018; moving = true; }
+    });
+    drawPrint(cv, cur, {labels:false, alpha:0.14});
+    if(!reduce) requestAnimationFrame(frame);
+    else if(moving) requestAnimationFrame(frame);
+  }
+  if(reduce){ AXES.forEach(function(a){ cur[a.key]=target[a.key]; }); drawPrint(cv,cur,{labels:false,alpha:0.14}); }
+  else requestAnimationFrame(frame);
+})();
+
+function refreshHero(){
+  const cv = $("hero-canvas");
+  if(cv && hasProfile()) drawPrint(cv, scores(), {labels:false, alpha:0.2});
+}
+
+/* ============================================================
+   VIEWS
+   ============================================================ */
+const VIEWS = {intro:$("view-intro"), test:$("view-test"), profile:$("view-profile")};
+let view = "intro";
+function show(name){
+  view = name;
+  for(const k in VIEWS) VIEWS[k].classList.toggle("hidden", k!==name);
+  $("nav-profile").classList.toggle("hidden", !hasProfile());
+  if(name==="intro"){ renderIntro(); refreshHero(); }
+  if(name==="profile"){ renderProfile(); }
+  window.scrollTo({top:0, behavior:"auto"});
+  updateRail();
+}
+function updateRail(){
+  const done = answeredCount() + passedCount();
+  $("rail-fill").style.width = Math.round(done/TOTAL*100) + "%";
+}
+function passedCount(){
+  let n=0; for(const id in state.answers) if(state.answers[id]==="pass") n++;
+  return n;
+}
+
+/* ============================================================
+   INTRO + QUESTION LOG
+   ============================================================ */
+function packStatus(p){
+  let open = 0;
+  p.items.forEach(function(q){ if(!(q.id in state.answers)) open++; });
+  if(open===0) return {cls:"done", text:"Complete"};
+  if(open===p.items.length && hasProfile()) return {cls:"new", text:"Unanswered"};
+  if(open===p.items.length) return {cls:"", text:"Waiting"};
+  return {cls:"", text:open + " left"};
+}
+function renderLedger(){
+  $("edition-no").textContent = PACKS.length;
+  $("pack-rows").innerHTML = PACKS.map(function(p){
+    const st = packStatus(p);
+    return '<tr>'+
+      '<td class="name">'+p.name+'</td>'+
+      '<td>'+fmtAdded(p.added)+'</td>'+
+      '<td>'+p.items.length+'</td>'+
+      '<td>'+p.covers+'</td>'+
+      '<td style="text-align:right"><span class="chip '+st.cls+'">'+st.text+'</span></td>'+
+    '</tr>';
+  }).join("");
+}
+function renderIntro(){
+  renderLedger();
+  const done = answeredCount(), passed = passedCount(), open = TOTAL - done - passed;
+  const start = $("cta-start"), resume = $("cta-resume"), prof = $("cta-profile");
+  if(!hasProfile()){
+    start.classList.remove("hidden"); start.textContent = "Start the ballot";
+    resume.classList.add("hidden"); prof.classList.add("hidden");
+    $("intro-status").textContent = TOTAL + " propositions. Nothing is sent anywhere — your answers stay in this browser.";
+  } else {
+    start.classList.add("hidden");
+    prof.classList.remove("hidden");
+    resume.classList.toggle("hidden", open===0);
+    resume.textContent = open ? "Answer the remaining " + open : "Resume";
+    $("intro-status").textContent = done + " of " + TOTAL + " answered" +
+      (passed ? " · " + passed + " passed" : "") +
+      (state.updated ? " · last saved " + fmtDate(state.updated) : "");
+  }
+}
+
+/* ============================================================
+   BALLOT
+   ============================================================ */
+let queue = [], qi = 0;
+
+function buildQueue(filter){
+  return ITEMS.filter(function(q){
+    if(q.id in state.answers) return false;
+    return filter ? filter(q) : true;
+  }).map(function(q){ return q.id; });
+}
+function beginRun(ids){
+  queue = ids;
+  qi = 0;
+  if(!queue.length){ show("profile"); return; }
+  if(!state.runFrom){ state.runFrom = scores(); state.runFromN = answeredCount(); }
+  save();
+  show("test");
+  renderQuestion();
+}
+function renderQuestion(){
+  const q = BY_ID[queue[qi]];
+  if(!q){ finishRun(); return; }
+  const ax = AXIS[q.ax];
+  const card = $("q-card");
+  card.classList.remove("anim-in"); void card.offsetWidth; card.classList.add("anim-in");
+
+  const overallIdx = answeredCount() + passedCount() + 1;
+  $("q-counter").textContent = "Q " + String(Math.min(overallIdx,TOTAL)).padStart(2,"0") + " / " + TOTAL;
+  $("q-pack").textContent = q.pack.name;
+  $("q-axis").textContent = ax.label;
+  $("q-topic").textContent = q.topic;
+  $("q-text").textContent = q.t;
+
+  const poles = document.querySelectorAll(".scale-poles .eyebrow");
+  poles[0].textContent = "Disagree";
+  poles[1].textContent = "Agree";
+
+  const cur = state.answers[q.id];
+  $("ovals").innerHTML = CHOICES.map(function(c){
+    const on = (cur === c.v) ? 1 : 0;
+    return '<button class="oval" role="radio" aria-checked="'+(on?"true":"false")+'" data-v="'+c.v+'"'+
+      (on?' data-on="1"':'')+(on&&Math.abs(c.v)===2?' data-strong="1"':'')+'>'+
+      '<i></i><span>'+c.label+'</span></button>';
+  }).join("");
+  Array.prototype.forEach.call($("ovals").children, function(b){
+    b.addEventListener("click", function(){ answer(+b.dataset.v); });
+  });
+  $("btn-back").disabled = qi===0;
+}
+let advancing = false;
+function answer(v){
+  if(advancing) return;
+  const q = BY_ID[queue[qi]];
+  state.answers[q.id] = v;
+  save();
+  Array.prototype.forEach.call($("ovals").children, function(b){
+    const on = +b.dataset.v === v;
+    b.setAttribute("aria-checked", on?"true":"false");
+    if(on){ b.dataset.on="1"; if(Math.abs(v)===2) b.dataset.strong="1"; else delete b.dataset.strong; }
+    else { delete b.dataset.on; delete b.dataset.strong; }
+  });
+  updateRail();
+  advancing = true;
+  setTimeout(function(){ advancing = false; qi++; renderQuestion(); }, 260);
+}
+function pass(){
+  const q = BY_ID[queue[qi]];
+  state.answers[q.id] = "pass";
+  save(); updateRail(); qi++; renderQuestion();
+}
+function finishRun(){
+  if(state.runFrom && answeredCount() > (state.runFromN||0)){
+    const before = state.runFrom, now = scores();
+    const firstEver = !state.checkins;
+    let moved = false;
+    AXES.forEach(function(a){ if(before[a.key] !== now[a.key]) moved = true; });
+    // nothing to drift against on the first pass, and nothing worth showing if
+    // the new answers left every axis where it was
+    state.prev = (firstEver || !moved) ? null : before;
+    state.runFrom = null;
+    state.checkins = (state.checkins||0) + 1;
+    save();
+  } else if(state.runFrom){
+    // walked in and straight back out — not a check-in
+    state.runFrom = null; save();
+  }
+  show("profile");
+}
+
+document.addEventListener("keydown", function(e){
+  if(view!=="test") return;
+  if(e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+  if(e.key>="1" && e.key<="5"){ e.preventDefault(); answer(CHOICES[+e.key-1].v); }
+  else if(e.key==="0"){ e.preventDefault(); pass(); }
+  else if(e.key==="ArrowLeft" && qi>0){ e.preventDefault(); qi--; renderQuestion(); }
+});
+
+/* ============================================================
+   PROFILE
+   ============================================================ */
+function renderProfile(){
+  const sc = scores();
+  const done = answeredCount();
+
+  $("handle").value = state.handle || "";
+  $("archetype").textContent = done ? archetype(sc) : "Nothing to plot yet";
+  $("slip-date").textContent = "Standing record · " + (state.updated ? fmtDate(state.updated) : fmtDate(Date.now()));
+  $("stat-answered").textContent = done;
+  $("stat-conviction").textContent = (done ? Math.round(strongCount()/done*100) : 0) + "%";
+  $("stat-checkins").textContent = Math.max(1, state.checkins||1);
+
+  drawPrint($("print-canvas"), sc, {values:true, ghost:state.prev});
+
+  // meters
+  $("meters").innerHTML = AXES.map(function(ax){
+    const v = sc[ax.key], n = sc[ax.key+"_n"];
+    const prev = state.prev ? state.prev[ax.key] : null;
+    const d = prev==null ? 0 : v - prev;
+    const lean = v===50 ? -1 : (v>50 ? 1 : 0);
+    const fillLeft = v>=50 ? 50 : v, fillW = Math.abs(v-50);
+    return '<div class="meter">'+
+      '<div class="meter-head">'+
+        '<b>'+ax.label+'</b>'+
+        (d ? '<span class="drift '+(d>0?"up":"dn")+'">'+(d>0?"+":"")+d+'</span>' : '')+
+        '<span class="val">'+(n ? v : "—")+'</span>'+
+      '</div>'+
+      '<div class="track">'+
+        '<div class="bar"></div><div class="mid"></div>'+
+        (prev!=null ? '<div class="ghost" style="left:'+prev+'%"></div>' : '')+
+        '<div class="fill" style="left:'+fillLeft+'%;width:'+fillW+'%"></div>'+
+        '<div class="knob" style="left:'+v+'%"></div>'+
+      '</div>'+
+      '<div class="poles">'+
+        '<span'+(lean===0?' class="hot"':'')+'>'+ax.poles[0]+'</span>'+
+        '<span'+(lean===1?' class="hot"':'')+'>'+ax.poles[1]+'</span>'+
+      '</div>'+
+    '</div>';
+  }).join("");
+
+  renderSignatures();
+  renderNote();
+  renderReview();
+  updateRail();
+}
+
+function renderSignatures(){
+  const strong = ITEMS.filter(function(q){ return Math.abs(state.answers[q.id])===2; });
+  const el = $("sig-list");
+  if(!strong.length){
+    el.innerHTML = '<div class="sig"><span class="verdict no">None yet</span>'+
+      '<div><q>You hedged on everything you answered. That is itself a position, but it makes for a quiet profile.</q></div></div>';
+    return;
+  }
+  strong.sort(function(a,b){ return AXIS[a.ax].i - AXIS[b.ax].i; });
+  el.innerHTML = strong.slice(0,10).map(function(q){
+    const agree = state.answers[q.id] > 0;
+    return '<div class="sig">'+
+      '<span class="verdict'+(agree?"":" no")+'">'+(agree?"Agrees":"Rejects")+'</span>'+
+      '<div><q>'+q.t+'</q><small>'+AXIS[q.ax].label+' · '+q.topic+' · '+q.pack.name+'</small></div>'+
+    '</div>';
+  }).join("");
+}
+
+function renderNote(){
+  const note = $("update-note");
+  if(!hasProfile()){ note.classList.add("hidden"); return; }
+  // packs added after this profile was started, still unanswered
+  const open = PACKS.filter(function(p){
+    return p.items.some(function(q){ return !(q.id in state.answers); });
+  });
+  if(!open.length){ note.classList.add("hidden"); return; }
+  // a pack you have never touched is genuinely new; a half-finished one is just unfinished
+  const untouched = open.filter(function(p){
+    return p.items.every(function(q){ return !(q.id in state.answers); });
+  });
+  const listed = untouched.length ? untouched : open;
+  let count = 0;
+  listed.forEach(function(p){ p.items.forEach(function(q){ if(!(q.id in state.answers)) count++; }); });
+  $("note-count").textContent = count;
+  $("note-pack").textContent = listed.map(function(p){ return p.name; }).join(", ");
+  $("note-verb").textContent = untouched.length
+    ? (count===1 ? "new proposition since you last checked in" : "new propositions since you last checked in")
+    : (count===1 ? "proposition you have not answered yet" : "propositions you have not answered yet");
+  $("btn-answer-new").textContent = untouched.length ? "Answer the new ones" : "Finish them off";
+  note.classList.remove("hidden");
+}
+
+function renderReview(){
+  const el = $("review-list");
+  el.innerHTML = ITEMS.map(function(q){
+    const cur = state.answers[q.id];
+    return '<div class="rev">'+
+      '<div><q>'+q.t+'</q><small class="eyebrow" style="display:block;margin-top:5px">'+AXIS[q.ax].label+' · '+q.topic+'</small></div>'+
+      '<div class="mini" data-q="'+q.id+'">'+ CHOICES.map(function(c){
+        const on = cur===c.v;
+        return '<button data-v="'+c.v+'"'+(on?' data-on="1"':'')+' title="'+c.label+'" aria-label="'+c.label+'">'+
+          (c.v<0?(c.v===-2?"--":"-"):c.v>0?(c.v===2?"++":"+"):"~")+'</button>';
+      }).join("") +'</div>'+
+    '</div>';
+  }).join("");
+}
+$("review-list").addEventListener("click", function(e){
+  const b = e.target.closest("button[data-v]"); if(!b) return;
+  const id = b.parentNode.dataset.q;
+  state.answers[id] = +b.dataset.v;
+  save();
+  renderProfile();
+  $("review").classList.remove("hidden");
+});
+
+/* ============================================================
+   SHARING + BACKUP
+   ============================================================ */
+let downloads = null;
+$("btn-card").classList.add("hidden");
+$("btn-export").classList.add("hidden");
+if(window.claude && window.claude.use){
+  window.claude.use("downloads").then(function(d){
+    downloads = d;
+    if(d){ $("btn-card").classList.remove("hidden"); $("btn-export").classList.remove("hidden"); }
+  }).catch(function(){});
+} else {
+  // opened outside the viewer: fall back to a plain anchor download
+  downloads = {save:function(req){
+    return new Promise(function(res){
+      const blob = req.data instanceof Blob ? req.data : new Blob([req.data]);
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = req.filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 4000);
+      res({status:"saved"});
+    });
+  }};
+  $("btn-card").classList.remove("hidden"); $("btn-export").classList.remove("hidden");
+}
+function saveFile(filename, data, okMsg){
+  if(!downloads){ toast("Saving files isn't available here"); return; }
+  downloads.save({filename:filename, data:data}).then(function(){
+    toast(okMsg);
+  }).catch(function(err){
+    const code = err && err.code;
+    if(code==="declined") return;
+    if(code==="too_large") toast("That file is too big to save");
+    else if(code==="rate_limited") toast("One save at a time — try again in a moment");
+    else toast("Couldn't save the file");
+  });
+}
+
+function postText(){
+  const sc = scores(), done = answeredCount();
+  const h = (state.handle||"").replace(/^@/,"").trim();
+  const lines = [];
+  lines.push("My political fingerprint" + (h ? " · @" + h : ""));
+  lines.push("“" + archetype(sc) + "”");
+  lines.push("");
+  AXES.forEach(function(ax){
+    const v = sc[ax.key];
+    const pole = v===50 ? "dead center" : ax.poles[v>50?1:0];
+    lines.push(ax.label + " → " + pole + " " + v);
+  });
+  lines.push("");
+  lines.push(done + "/" + TOTAL + " propositions · " +
+    (done ? Math.round(strongCount()/done*100) : 0) + "% answered without hedging");
+  return lines.join("\n");
+}
+
+function drawCard(){
+  const W = 1200, H = 675;
+  const cv = document.createElement("canvas");
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext("2d");
+  const sc = scores(), done = answeredCount();
+
+  ctx.fillStyle = css("--paper"); ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = css("--card");
+  ctx.fillRect(40,40,W-80,H-80);
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 2;
+  ctx.strokeRect(40,40,W-80,H-80);
+
+  // the print, on the left
+  const sub = document.createElement("canvas"); sub.width = 460; sub.height = 460;
+  drawPrint(sub, sc, {values:true});
+  ctx.drawImage(sub, 78, 108);
+
+  // wordmark + archetype
+  const h = (state.handle||"").replace(/^@/,"").trim();
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = css("--muted");
+  ctx.font = "500 15px 'JetBrains Mono', ui-monospace, monospace";
+  ctx.fillText("POLITICAL FINGERPRINT" + (h ? "   ·   @"+h : ""), 588, 138);
+
+  ctx.fillStyle = css("--ink");
+  const name = done ? archetype(sc) : "Nothing to plot yet";
+  ctx.font = "800 46px 'Bricolage Grotesque', Helvetica, Arial, sans-serif";
+  const words = name.split(" "); let ln = "", lines = [];
+  words.forEach(function(w){
+    const t = ln ? ln+" "+w : w;
+    if(ctx.measureText(t).width > 520 && ln){ lines.push(ln); ln = w; } else ln = t;
+  });
+  lines.push(ln);
+  lines.forEach(function(l,i){ ctx.fillText(l, 588, 196 + i*54); });
+
+  // axis bars
+  let y = 196 + lines.length*54 + 34;
+  AXES.forEach(function(ax){
+    const v = sc[ax.key];
+    ctx.font = "600 16px 'Bricolage Grotesque', Helvetica, Arial, sans-serif";
+    ctx.fillStyle = css("--ink");
+    ctx.fillText(ax.label, 588, y);
+    ctx.font = "500 15px 'JetBrains Mono', ui-monospace, monospace";
+    ctx.fillStyle = css("--muted");
+    const pole = v===50 ? "dead center" : ax.poles[v>50?1:0];
+    ctx.textAlign = "right";
+    ctx.fillText(pole.toLowerCase() + "  " + v, W-88, y);
+    ctx.textAlign = "left";
+    const bx = 588, bw = W-88-588;
+    ctx.fillStyle = css("--sunk"); ctx.fillRect(bx, y+10, bw, 4);
+    ctx.fillStyle = css("--accent");
+    const half = bw/2;
+    if(v>=50) ctx.fillRect(bx+half, y+10, (v-50)/50*half, 4);
+    else ctx.fillRect(bx+half - (50-v)/50*half, y+10, (50-v)/50*half, 4);
+    ctx.fillStyle = css("--line-2"); ctx.fillRect(bx+half-1, y+6, 2, 12);
+    y += 40;
+  });
+
+  ctx.font = "500 14px 'JetBrains Mono', ui-monospace, monospace";
+  ctx.fillStyle = css("--muted");
+  ctx.fillText(done + "/" + TOTAL + " propositions  ·  " +
+    (done ? Math.round(strongCount()/done*100) : 0) + "% without hedging  ·  " +
+    fmtDate(state.updated||Date.now()), 78, H-72);
+  return cv;
+}
+
+/* ============================================================
+   WIRING
+   ============================================================ */
+$("cta-start").addEventListener("click", function(){ beginRun(buildQueue()); });
+$("cta-resume").addEventListener("click", function(){ beginRun(buildQueue()); });
+$("cta-profile").addEventListener("click", function(){ show("profile"); });
+$("nav-profile").addEventListener("click", function(){ show("profile"); });
+$("nav-ledger").addEventListener("click", function(){
+  if(view!=="intro") show("intro");
+  setTimeout(function(){ $("ledger").scrollIntoView({behavior:"smooth", block:"start"}); }, 30);
+});
+$("btn-back").addEventListener("click", function(){ if(qi>0){ qi--; renderQuestion(); } });
+$("btn-skip").addEventListener("click", pass);
+$("btn-bail").addEventListener("click", finishRun);
+$("btn-answer-new").addEventListener("click", function(){
+  beginRun(buildQueue(function(q){ return true; }));
+});
+
+$("handle").addEventListener("input", function(){
+  state.handle = this.value.replace(/[^A-Za-z0-9_]/g,"");
+  this.value = state.handle;
+  save();
+});
+
+$("btn-copy-post").addEventListener("click", function(){
+  const txt = postText();
+  const done = function(){ toast("Post copied — paste it into X"); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done, function(){ fallbackCopy(txt, done); });
+  } else fallbackCopy(txt, done);
+});
+function fallbackCopy(txt, ok){
+  const ta = document.createElement("textarea");
+  ta.value = txt; ta.style.position="fixed"; ta.style.opacity="0";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); ok(); }catch(e){ toast("Copy failed — select the text manually"); }
+  ta.remove();
+}
+
+$("btn-card").addEventListener("click", function(){
+  drawCard().toBlob(function(blob){
+    if(!blob){ toast("Couldn't render the card"); return; }
+    saveFile("political-fingerprint.png", blob, "Profile card saved");
+  }, "image/png");
+});
+
+$("btn-export").addEventListener("click", function(){
+  const payload = {
+    format:"political-fingerprint/v1",
+    exported: new Date().toISOString(),
+    handle: state.handle,
+    checkins: state.checkins,
+    answers: state.answers
+  };
+  saveFile("political-fingerprint-backup.json", JSON.stringify(payload,null,2), "Backup saved");
+});
+
+$("btn-import").addEventListener("click", function(){ $("file-import").click(); });
+$("file-import").addEventListener("change", function(){
+  const f = this.files && this.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = function(){
+    try{
+      const d = JSON.parse(r.result);
+      if(!d || typeof d.answers !== "object") throw new Error("shape");
+      let kept = 0;
+      const next = {};
+      for(const id in d.answers){
+        if(!BY_ID[id]) continue;
+        const v = d.answers[id];
+        if(v==="pass" || (typeof v==="number" && v>=-2 && v<=2)){ next[id]=v; kept++; }
+      }
+      state.answers = next;
+      if(typeof d.handle === "string") state.handle = d.handle.replace(/[^A-Za-z0-9_]/g,"");
+      if(typeof d.checkins === "number") state.checkins = d.checkins;
+      state.prev = null; state.runFrom = null;
+      save();
+      show("profile");
+      toast("Restored " + kept + " answers");
+    }catch(e){
+      toast("That file isn't a Political Fingerprint backup");
+    }
+  };
+  r.readAsText(f);
+  this.value = "";
+});
+
+$("btn-review").addEventListener("click", function(){
+  const r = $("review");
+  const open = r.classList.toggle("hidden");
+  this.textContent = open ? "Review every answer" : "Hide the full list";
+  if(!open) setTimeout(function(){ r.scrollIntoView({behavior:"smooth", block:"start"}); }, 30);
+});
+
+$("btn-reset").addEventListener("click", function(){
+  if(this.dataset.armed){
+    state = blank();
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    delete this.dataset.armed;
+    this.textContent = "Erase profile";
+    show("intro");
+    toast("Profile erased");
+    return;
+  }
+  this.dataset.armed = "1";
+  this.textContent = "Erase everything — click again";
+  const btn = this;
+  setTimeout(function(){
+    if(btn.dataset.armed){ delete btn.dataset.armed; btn.textContent = "Erase profile"; }
+  }, 4000);
+});
+
+/* redraw the canvases when the viewer flips theme */
+const mq = window.matchMedia("(prefers-color-scheme: dark)");
+(mq.addEventListener ? mq.addEventListener.bind(mq,"change") : mq.addListener.bind(mq))(function(){
+  refreshHero();
+  if(view==="profile") drawPrint($("print-canvas"), scores(), {values:true, ghost:state.prev});
+});
+
+/* ---- boot ---- */
+renderLedger();
+show(hasProfile() ? "profile" : "intro");
+})();
+</script>
