@@ -4,17 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-"Political Fingerprint" — a single-file, no-build web app (`index.html`) where a user answers Likert-scale propositions and gets a six-axis hexagonal "fingerprint", an archetype name, and shareable outputs (X post text, PNG card, JSON backup). There is no package manager, build step, linter, or test suite; open `index.html` in a browser to run it.
+"Political Fingerprint" — a no-build static web app where a user answers Likert-scale propositions and gets a six-axis hexagonal "fingerprint", an archetype name, and shareable outputs (X post text, PNG card, JSON backup). There is no package manager, build step, linter, or test suite; open `index.html` in a browser to run it (works from `file://`).
 
-The file has no `<!doctype>`/`<html>`/`<head>` wrapper — it begins at `<title>` because it is authored as a Claude Artifact page (the host adds the skeleton). Keep that shape. It also probes `window.claude.use("downloads")` for file saving and falls back to an anchor-download shim when opened outside the artifact viewer.
+The app probes `window.claude.use("downloads")` for file saving (Claude Artifact viewer) and falls back to an anchor-download shim elsewhere.
 
-## Layout of index.html
+## File layout
 
-1. `<style>` — design tokens on `:root`, redefined for dark mode under both `@media (prefers-color-scheme: dark) :root:not([data-theme="light"])` and `:root[data-theme="dark"]`. Add new colors as tokens in all three places. Fonts: Bricolage Grotesque (headings), Newsreader (body), JetBrains Mono (UI labels), from Google Fonts only.
-2. Markup — three `<main>` views (`view-intro`, `view-test`, `view-profile`) toggled by `show(name)`; only one is visible at a time.
-3. One IIFE `<script>` (`"use strict"`, ES5-style `function` callbacks, `$()` = `getElementById`).
+- `index.html` — document shell and markup: three `<main>` views (`view-intro`, `view-test`, `view-profile`) toggled by `show(name)`; only one is visible at a time.
+- `css/styles.css` — design tokens on `:root`, redefined for dark mode under both `@media (prefers-color-scheme: dark) :root:not([data-theme="light"])` and `:root[data-theme="dark"]`. Add new colors as tokens in all three places. Fonts: Bricolage Grotesque (headings), Newsreader (body), JetBrains Mono (UI labels), from Google Fonts only.
+- `js/` — classic (non-module) scripts loaded in order at the end of `<body>`. They share top-level `const`/`let`/function declarations through the global scope, so **load order matters**: a file may only call into later files from inside callbacks, never at load time. Each file starts with `"use strict"`; code is ES5-style `function` callbacks, `$()` = `getElementById`.
+  1. `data.js` — `AXES`, `PACKS`, derived `ITEMS`/`BY_ID`/`TOTAL`, `CHOICES`
+  2. `store.js` — `state`, `load`/`save`/`blank`, `scores`, `archetype`
+  3. `dom.js` — `$`, `css`, date formatters, `toast`
+  4. `fingerprint.js` — `drawPrint` and the animated hero canvas
+  5. `views.js` — `show`, intro/question log, ballot, profile rendering
+  6. `share.js` — `saveFile`, `postText`, `drawCard`
+  7. `main.js` — button wiring, theme-change redraw, boot
 
-## Data model (top of the script)
+## Data model (`js/data.js`)
 
 - `AXES` — six axes (`econ`, `bord`, `speech`, `inst`, `tech`, `cult`), each with two `poles` and `words` (adj/noun pairs) used to build archetype names. Pole[0] is the hexagon center, pole[1] the outer edge.
 - `PACKS` — question sets, each with `id`, `name`, `added` date, `covers`, and `items`. **Packs are append-only**: new questions ship as a new pack appended to the array; never rewrite or renumber existing item `id`s, since saved answers are keyed by them (unknown ids are silently dropped on load/import). The "Edition" number shown in the UI is `PACKS.length`.
