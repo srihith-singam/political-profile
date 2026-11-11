@@ -19,7 +19,7 @@ The app probes `window.claude.use("downloads")` for file saving (Claude Artifact
   4. `fingerprint.js` — `drawPrint` and the animated hero canvas
   5. `views.js` — `show`, intro/question log, ballot, profile rendering
   6. `share.js` — `saveFile`, X post + copy, JSON backup export/import, `drawCard`
-  7. `main.js` — event wiring only, theme-change redraw, boot
+  7. `main.js` — event wiring (except the ballot keyboard handler, which lives in `views.js`), theme-change redraw, boot
 
 ## Data model (`data.js`)
 
