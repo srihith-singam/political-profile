@@ -19,17 +19,12 @@ function updateRail(){
   const done = answeredCount() + passedCount();
   $("rail-fill").style.width = Math.round(done/TOTAL*100) + "%";
 }
-function passedCount(){
-  let n=0; for(const id in state.answers) if(state.answers[id]==="pass") n++;
-  return n;
-}
 
 /* ============================================================
    INTRO + QUESTION LOG
    ============================================================ */
 function packStatus(p){
-  let open = 0;
-  p.items.forEach(function(q){ if(!(q.id in state.answers)) open++; });
+  const open = unansweredIn(p);
   if(open===0) return {cls:"done", text:"Complete"};
   if(open===p.items.length && hasProfile()) return {cls:"new", text:"Unanswered"};
   if(open===p.items.length) return {cls:"", text:"Waiting"};
@@ -72,11 +67,10 @@ function renderIntro(){
    ============================================================ */
 let queue = [], qi = 0;
 
-function buildQueue(filter){
-  return ITEMS.filter(function(q){
-    if(q.id in state.answers) return false;
-    return filter ? filter(q) : true;
-  }).map(function(q){ return q.id; });
+/* Ids of every proposition not yet answered or passed, in ballot order. */
+function buildQueue(){
+  return ITEMS.filter(function(q){ return !(q.id in state.answers); })
+    .map(function(q){ return q.id; });
 }
 function beginRun(ids){
   queue = ids;
@@ -101,42 +95,45 @@ function renderQuestion(){
   $("q-topic").textContent = q.topic;
   $("q-text").textContent = q.t;
 
-  const poles = document.querySelectorAll(".scale-poles .eyebrow");
-  poles[0].textContent = "Disagree";
-  poles[1].textContent = "Agree";
-
-  const cur = state.answers[q.id];
   $("ovals").innerHTML = CHOICES.map(function(c){
-    const on = (cur === c.v) ? 1 : 0;
-    return '<button class="oval" role="radio" aria-checked="'+(on?"true":"false")+'" data-v="'+c.v+'"'+
-      (on?' data-on="1"':'')+(on&&Math.abs(c.v)===2?' data-strong="1"':'')+'>'+
+    return '<button class="oval" role="radio" aria-checked="false" data-v="'+c.v+'">'+
       '<i></i><span>'+c.label+'</span></button>';
   }).join("");
-  Array.prototype.forEach.call($("ovals").children, function(b){
-    b.addEventListener("click", function(){ answer(+b.dataset.v); });
-  });
+  markChoice(state.answers[q.id]);
   $("btn-back").disabled = qi===0;
 }
-let advancing = false;
-function answer(v){
-  if(advancing) return;
-  const q = BY_ID[queue[qi]];
-  state.answers[q.id] = v;
-  save();
+/* Highlight the oval for answer v (none if v isn't a number). */
+function markChoice(v){
   Array.prototype.forEach.call($("ovals").children, function(b){
     const on = +b.dataset.v === v;
-    b.setAttribute("aria-checked", on?"true":"false");
-    if(on){ b.dataset.on="1"; if(Math.abs(v)===2) b.dataset.strong="1"; else delete b.dataset.strong; }
-    else { delete b.dataset.on; delete b.dataset.strong; }
+    b.setAttribute("aria-checked", on ? "true" : "false");
+    if(on) b.dataset.on = "1"; else delete b.dataset.on;
+    if(on && Math.abs(v)===2) b.dataset.strong = "1"; else delete b.dataset.strong;
   });
+}
+$("ovals").addEventListener("click", function(e){
+  const b = e.target.closest("button[data-v]");
+  if(b) answer(+b.dataset.v);
+});
+
+/* While an answer is animating out, ignore further input so a quick second
+   key press can't overwrite it or skip the next proposition. */
+let advancing = false;
+function record(v, delay){
+  if(advancing) return;
+  const q = BY_ID[queue[qi]];
+  if(!q) return;
+  state.answers[q.id] = v;
+  save();
   updateRail();
   advancing = true;
-  setTimeout(function(){ advancing = false; qi++; renderQuestion(); }, 260);
+  setTimeout(function(){ advancing = false; qi++; renderQuestion(); }, delay);
 }
-function pass(){
-  const q = BY_ID[queue[qi]];
-  state.answers[q.id] = "pass";
-  save(); updateRail(); qi++; renderQuestion();
+function answer(v){ markChoice(v); record(v, 260); }
+function pass(){ record("pass", 0); }
+function back(){
+  if(advancing || qi===0) return;
+  qi--; renderQuestion();
 }
 function finishRun(){
   if(state.runFrom && answeredCount() > (state.runFromN||0)){
@@ -162,7 +159,7 @@ document.addEventListener("keydown", function(e){
   if(e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
   if(e.key>="1" && e.key<="5"){ e.preventDefault(); answer(CHOICES[+e.key-1].v); }
   else if(e.key==="0"){ e.preventDefault(); pass(); }
-  else if(e.key==="ArrowLeft" && qi>0){ e.preventDefault(); qi--; renderQuestion(); }
+  else if(e.key==="ArrowLeft"){ e.preventDefault(); back(); }
 });
 
 /* ============================================================
@@ -174,10 +171,10 @@ function renderProfile(){
 
   $("handle").value = state.handle || "";
   $("archetype").textContent = done ? archetype(sc) : "Nothing to plot yet";
-  $("slip-date").textContent = "Standing record · " + (state.updated ? fmtDate(state.updated) : fmtDate(Date.now()));
+  $("slip-date").textContent = "Standing record · " + fmtDate(state.updated || Date.now());
   $("stat-answered").textContent = done;
-  $("stat-conviction").textContent = (done ? Math.round(strongCount()/done*100) : 0) + "%";
-  $("stat-checkins").textContent = Math.max(1, state.checkins||1);
+  $("stat-conviction").textContent = convictionPct() + "%";
+  $("stat-checkins").textContent = state.checkins || 1;
 
   drawPrint($("print-canvas"), sc, {values:true, ghost:state.prev});
 
@@ -234,18 +231,13 @@ function renderSignatures(){
 function renderNote(){
   const note = $("update-note");
   if(!hasProfile()){ note.classList.add("hidden"); return; }
-  // packs added after this profile was started, still unanswered
-  const open = PACKS.filter(function(p){
-    return p.items.some(function(q){ return !(q.id in state.answers); });
-  });
+  // packs that still have unanswered propositions
+  const open = PACKS.filter(function(p){ return unansweredIn(p) > 0; });
   if(!open.length){ note.classList.add("hidden"); return; }
   // a pack you have never touched is genuinely new; a half-finished one is just unfinished
-  const untouched = open.filter(function(p){
-    return p.items.every(function(q){ return !(q.id in state.answers); });
-  });
+  const untouched = open.filter(function(p){ return unansweredIn(p) === p.items.length; });
   const listed = untouched.length ? untouched : open;
-  let count = 0;
-  listed.forEach(function(p){ p.items.forEach(function(q){ if(!(q.id in state.answers)) count++; }); });
+  const count = listed.reduce(function(n,p){ return n + unansweredIn(p); }, 0);
   $("note-count").textContent = count;
   $("note-pack").textContent = listed.map(function(p){ return p.name; }).join(", ");
   $("note-verb").textContent = untouched.length
@@ -255,6 +247,7 @@ function renderNote(){
   note.classList.remove("hidden");
 }
 
+const MINI_MARKS = {"-2":"--", "-1":"-", "0":"~", "1":"+", "2":"++"};
 function renderReview(){
   const el = $("review-list");
   el.innerHTML = ITEMS.map(function(q){
@@ -262,9 +255,8 @@ function renderReview(){
     return '<div class="rev">'+
       '<div><q>'+q.t+'</q><small class="eyebrow" style="display:block;margin-top:5px">'+AXIS[q.ax].label+' · '+q.topic+'</small></div>'+
       '<div class="mini" data-q="'+q.id+'">'+ CHOICES.map(function(c){
-        const on = cur===c.v;
-        return '<button data-v="'+c.v+'"'+(on?' data-on="1"':'')+' title="'+c.label+'" aria-label="'+c.label+'">'+
-          (c.v<0?(c.v===-2?"--":"-"):c.v>0?(c.v===2?"++":"+"):"~")+'</button>';
+        return '<button data-v="'+c.v+'"'+(cur===c.v?' data-on="1"':'')+' title="'+c.label+'" aria-label="'+c.label+'">'+
+          MINI_MARKS[c.v]+'</button>';
       }).join("") +'</div>'+
     '</div>';
   }).join("");

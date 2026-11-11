@@ -14,12 +14,12 @@ The app probes `window.claude.use("downloads")` for file saving (Claude Artifact
 - `styles.css` — design tokens on `:root`, redefined for dark mode under both `@media (prefers-color-scheme: dark) :root:not([data-theme="light"])` and `:root[data-theme="dark"]`. Add new colors as tokens in all three places. Fonts: Bricolage Grotesque (headings), Newsreader (body), JetBrains Mono (UI labels), from Google Fonts only.
 - `*.js` — classic (non-module) scripts loaded in order at the end of `<body>`. They share top-level `const`/`let`/function declarations through the global scope, so **load order matters**: a file may only call into later files from inside callbacks, never at load time. Each file starts with `"use strict"`; code is ES5-style `function` callbacks, `$()` = `getElementById`.
   1. `data.js` — `AXES`, `PACKS`, derived `ITEMS`/`BY_ID`/`TOTAL`, `CHOICES`
-  2. `store.js` — `state`, `load`/`save`/`blank`, `scores`, `archetype`
+  2. `store.js` — `state`, `load`/`save`/`blank`, answer validation (`cleanAnswers`, `cleanHandle`), counts, `scores`, `archetype`
   3. `dom.js` — `$`, `css`, date formatters, `toast`
   4. `fingerprint.js` — `drawPrint` and the animated hero canvas
   5. `views.js` — `show`, intro/question log, ballot, profile rendering
-  6. `share.js` — `saveFile`, `postText`, `drawCard`
-  7. `main.js` — button wiring, theme-change redraw, boot
+  6. `share.js` — `saveFile`, X post + copy, JSON backup export/import, `drawCard`
+  7. `main.js` — event wiring only, theme-change redraw, boot
 
 ## Data model (`data.js`)
 
